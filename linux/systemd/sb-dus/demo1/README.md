@@ -1,5 +1,7 @@
 # sd-bus 示例
 
+
+参考[例程](https://0pointer.net/blog/the-new-sd-bus-api-of-systemd.html)
 ## ubuntu 依赖安装
 ```shell
   sudo apt install libsystemd-dev
