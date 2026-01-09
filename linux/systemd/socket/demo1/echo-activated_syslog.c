@@ -1,5 +1,5 @@
 #include <errno.h>
-#include <stdio.h>
+#include <syslog.h>
 #include <poll.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,9 +11,10 @@
 #define IDLE_TIMEOUT_SEC 30  // 空闲 30 秒后退出
 
 int main() {
+    openlog("echo-activated", LOG_PID | LOG_CONS, LOG_DAEMON);
     int n_fds = sd_listen_fds(0);
     if (n_fds <= 0) {
-        fprintf(stderr, "Not started by systemd socket activation.\n");
+        syslog(LOG_ERR, "Not started by systemd socket activation.");
         return EXIT_FAILURE;
     }
 
@@ -24,8 +25,7 @@ int main() {
     int opt = 1;
     setsockopt(listen_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 
-    printf("Echo service started via socket activation. Listening on inherited fd %d...\n", listen_fd);
-    fflush(stdout);
+    syslog(LOG_INFO, "Echo service started via socket activation. Listening on inherited fd %d...", listen_fd);
 
     for (;;) {
         struct pollfd pfd = {
@@ -38,13 +38,13 @@ int main() {
 
         if (ret == -1) {
             if (errno == EINTR) continue; // 被信号中断，重试
-            perror("poll() failed");
+            syslog(LOG_ERR, "poll() failed: %m");
             break;
         }
 
         if (ret == 0) {
             // 超时！无连接到达
-            fprintf(stderr, "Idle timeout reached, exiting.");
+            syslog(LOG_INFO, "Idle timeout reached, exiting.");
             break;
         }
 
@@ -52,7 +52,7 @@ int main() {
         socklen_t client_len = sizeof(client_addr);
         int client_fd = accept(listen_fd, (struct sockaddr *)&client_addr, &client_len);
         if (client_fd == -1) {
-            perror("accept");
+            syslog(LOG_ERR, "accept failed: %m");
             continue;
         }
 
@@ -60,8 +60,7 @@ int main() {
         ssize_t n = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         if (n > 0) {
             buffer[n] = '\0';
-            printf("Received: %s\n", buffer);
-            fflush(stdout);
+            syslog(LOG_INFO, "Received: %s", buffer);
             send(client_fd, buffer, n, 0); // echo back
         }
         close(client_fd);

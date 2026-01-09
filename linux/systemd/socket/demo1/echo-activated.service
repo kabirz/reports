@@ -3,7 +3,7 @@ Description=Echo Service (Activated on Demand)
 Requires=echo-activated.socket
 
 [Service]
-ExecStart=/user/local/bin/echo-activated
+ExecStart=/usr/local/bin/echo-activated
 StandardOutput=journal
 StandardError=journal
 Restart=on-failure

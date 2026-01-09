@@ -3,7 +3,7 @@ Description=Echo Service Socket (Socket-Activated)
 Before=echo-activated.service
 
 [Socket]
-ListenStream=127.0.0.1:9999
+ListenStream=0.0.0.0:9999
 Accept=false
 
 [Install]

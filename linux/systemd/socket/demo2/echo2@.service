@@ -1,0 +1,4 @@
+[Service]
+ExecStart=/usr/local/bin/echo2
+StandardInput=socket
+StandardOutput=socket
